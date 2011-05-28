@@ -1,5 +1,17 @@
 /**
- * 
+ * Copyright (c) 2011, Branden Visser (mrvisser at gmail dot com)
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 package ca.mrvisser.velocitytag.api;
 
@@ -12,7 +24,6 @@ import java.util.Properties;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
-import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 
@@ -44,38 +55,39 @@ import org.apache.velocity.app.VelocityEngine;
  * <p>
  * <pre>
  * if (evaluateTag()) {
- * 	context = getContext();
- * 	render #doStartTag() macro with context
- * 	render #doEndTag() macro with context
+ *  context = getContext();
+ *  render #doStartTag() macro with context
+ *  render #doEndTag() macro with context
  * }
  * 
  * if (evaluatePage()) {
- * 	exit with {@link javax.servlet.jsp.tagext.Tag#EVAL_PAGE}
+ *  reset()
+ *  exit with {@link javax.servlet.jsp.tagext.Tag#EVAL_PAGE}
  * } else {
- * 	exit with {@link javax.servlet.jsp.tagext.Tag#SKIP_PAGE}
+ *  reset()
+ *  exit with {@link javax.servlet.jsp.tagext.Tag#SKIP_PAGE}
  * }
  * </pre>
  * 
  * @author Branden
  */
-public abstract class VelocityTag extends TagSupport implements TemplatableTag {
+public abstract class VelocityTag extends TagSupport {
 	private static final long serialVersionUID = 1L;
 
-	private final static String START_TAG_TEMPLATE = "ca/mrvisser/velocitytag/config/do-start-tag.vm";
-	private final static String END_TAG_TEMPLATE = "ca/mrvisser/velocitytag/config/do-end-tag.vm";
-	
-	private Template startTemplate;
-	private Template endTemplate;
+	private final static String START_TAG_VM_NAME = "doStartTag";
+	private final static String END_TAG_VM_NAME = "doEndTag";
 	
 	boolean evaluateTag;
 	VelocityEngine engine;
 	Map<String, Object> context;
 	
-	public VelocityTag() throws Exception {
-		engine = new VelocityEngine();
-		engine.init(getConfiguration());
-		startTemplate = engine.getTemplate(START_TAG_TEMPLATE, "UTF-8");
-		endTemplate = engine.getTemplate(END_TAG_TEMPLATE, "UTF-8");
+	public VelocityTag() {
+		try {
+			engine = new VelocityEngine();
+			engine.init(getConfiguration());
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	/* (non-Javadoc)
@@ -84,12 +96,10 @@ public abstract class VelocityTag extends TagSupport implements TemplatableTag {
 	@Override
 	public int doStartTag() throws JspException {
 		evaluateTag = evaluateTag();
-		
 		if (evaluateTag) {
-			context = getContext();
-			render(startTemplate, new VelocityContext(context), pageContext.getOut());
+			context = buildContext();
+			renderVelocimacro(START_TAG_VM_NAME, new VelocityContext(context), pageContext.getOut());
 		}
-		
 		return SKIP_BODY;
 	}
 	
@@ -99,10 +109,13 @@ public abstract class VelocityTag extends TagSupport implements TemplatableTag {
 	@Override
 	public int doEndTag() throws JspException {
 		if (evaluateTag)
-			render(endTemplate, new VelocityContext(context), pageContext.getOut());
-		return (evaluatePage()) ? EVAL_PAGE : SKIP_PAGE;
+			renderVelocimacro(END_TAG_VM_NAME, new VelocityContext(context), pageContext.getOut());
+		int result = (evaluatePage()) ? EVAL_PAGE : SKIP_PAGE;
+		reset();
+		context = null;
+		return result;
 	}
-	
+
 	/**
 	 * Specifies whether or not the tag should be evaluated. If {@code false}, neither the doStartTag or doEndTag
 	 * macros will be rendered. However, {@link #evaluatePage()} will be executed afterward to determine if the
@@ -122,22 +135,40 @@ public abstract class VelocityTag extends TagSupport implements TemplatableTag {
 	protected boolean evaluatePage() {
 		return true;
 	}
+	
+	/**
+	 * The path on the class-path from which the tag's velocity template may be loaded.
+	 * 
+	 * @return
+	 */
+	protected abstract String getTemplateReference();
+	
+	/**
+	 * Build a Map from which the VelocityContext will be derived when rendering the tag's template macros.
+	 * 
+	 * @return
+	 */
+	protected abstract Map<String, Object> buildContext();
+	
+	/**
+	 * Reset the tag state to its initial form and clean memory resources. In some (most?) servlet containers, instances of Tag's may be
+	 * pooled. If your tag changes state while rendering a template or holds on to heavy resources, it's important to reset that state to
+	 * its initial configuration using this method. Refer to the life-cycle of the {@link VelocityTag} to see how this method is used.
+	 */
+	protected abstract void reset();
 
 	/**
-	 * This is a convenience method to render a velocity template and context, and output it into the writer. The
-	 * convenience is that exceptions are wrapped in a JspException and escalated. If you need to handle any of the
-	 * exceptions, this is functionally equivalent to executing:
-	 * <p>
-	 * <code>template.merge(context, out)</code>
+	 * Convenience method to render a velocimacro, and output it into the writer. The convenience is that exceptions are wrapped in a
+	 * JspException and escalated.
 	 * 
 	 * @param template The template to render
 	 * @param context The context that the template will use
 	 * @param out The rendered content will be output here
 	 * @throws JspException Thrown if <b>any</b> exception occurs when attempting to render the template.
 	 */
-	void render(Template template, VelocityContext context, Writer out) throws JspException {
+	protected void renderVelocimacro(String vmName, VelocityContext context, Writer out) throws JspException {
 		try {
-			template.merge(context, out);
+			engine.invokeVelocimacro(vmName, getClass().getName()+"#"+vmName, new String[0], context, out);
 		} catch (Exception e) {
 			throw new JspException(e);
 		}
@@ -150,18 +181,4 @@ public abstract class VelocityTag extends TagSupport implements TemplatableTag {
 		props.put("velocimacro.library", getTemplateReference());
 		return props;
 	}
-	
-	/**
-	 * The path on the class-path from which the tag's velocity template may be loaded.
-	 * 
-	 * @return
-	 */
-	public abstract String getTemplateReference();
-	
-	/**
-	 * A Map from which the VelocityContext will be derived when rendering the tag's template macros.
-	 * 
-	 * @return
-	 */
-	public abstract Map<String, Object> getContext();
 }
