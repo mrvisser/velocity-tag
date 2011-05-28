@@ -62,10 +62,10 @@ First, extend ``ca.mrvisser.velocitytag.api.VelocityTag`` like so:
 
 Second, write a velocity template for your tag and place it in ``ca/mrvisser/testtags/templates/hello-world-tag.vm``:
 
-	#doStartTag()
+	#macro(doStartTag)
 		<span>Hello, $who!
 	#end
-	#doEndTag()
+	#macro(doEndTag)
 		</span>
 	#end
 
