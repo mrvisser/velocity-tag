@@ -76,6 +76,7 @@ public abstract class VelocityTag extends TagSupport {
 
 	private final static String START_TAG_VM_NAME = "doStartTag";
 	private final static String END_TAG_VM_NAME = "doEndTag";
+	private final static String DEFAULT_TEMPLATE_NAME = "%s.vm";
 	
 	boolean evaluateTag;
 	VelocityEngine engine;
@@ -137,11 +138,16 @@ public abstract class VelocityTag extends TagSupport {
 	}
 	
 	/**
-	 * The path on the class-path from which the tag's velocity template may be loaded.
+	 * The path on the class-path from which the tag's velocity template may be loaded. By default, the template
+	 * reference will be in the same package tree as the concrete tag implementation, and will have an extension of
+	 * .vm. For example, if a class {@code ca.mrvisser.velocitytag.mytag.FooBar} extends Velocity tag, this method
+	 * would return the reference "ca/mrvisser/velocitytag/mytag/FooBar.vm".
 	 * 
 	 * @return
 	 */
-	protected abstract String getTemplateReference();
+	protected String getTemplateReference() {
+		return String.format(DEFAULT_TEMPLATE_NAME, getClass().getCanonicalName().replace('.', '/'));
+	}
 	
 	/**
 	 * Build a Map from which the VelocityContext will be derived when rendering the tag's template macros.
