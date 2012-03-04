@@ -1,0 +1,6 @@
+#macro(doStartTag)
+    <span>Hello, $who!
+#end
+#macro(doEndTag)
+    </span>
+#end

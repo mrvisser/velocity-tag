@@ -1,0 +1,29 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>ca.mrvisser.velocitytag.examples</groupId>
+  <artifactId>hello-world</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <packaging>war</packaging>
+  <name>VelocityTag :: Hello World Example</name>
+  <description>An example of a simple Hello World JSP tag using VelocityTag.</description>
+  <dependencies>
+  	<dependency>
+  		<groupId>ca.mrvisser</groupId>
+  		<artifactId>velocity-tag</artifactId>
+  		<version>current</version>
+  		<scope>compile</scope>
+  	</dependency>
+  </dependencies>
+  
+  <build> 
+    <plugins> 
+      <plugin> 
+        <artifactId>maven-compiler-plugin</artifactId> 
+        <configuration>
+          <source>1.5</source> 
+          <target>1.5</target> 
+        </configuration> 
+      </plugin> 
+    </plugins> 
+  </build> 
+</project>
