@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE taglib PUBLIC "-//Sun Microsystems, Inc.//DTD JSP Tag Library 1.1//EN" 
+		"http://java.sun.com/j2ee/dtds/web-jsptaglibrary_1_1.dtd">
+<taglib>
+	<tlibversion>1.0</tlibversion>
+	<jspversion>1.1</jspversion>
+	<shortname>VelocityTag Examples</shortname>
+	<info>VelocityTag example tag library</info>
+
+	<tag>
+		<name>container</name>
+		<tagclass>ca.mrvisser.velocitytag.examples.container.taglib.ContainerTag</tagclass>
+		<attribute>
+			<name>id</name>
+			<required>false</required>
+		</attribute>
+		<attribute>
+			<name>styleClass</name>
+			<required>false</required>
+		</attribute>
+		<attribute>
+			<name>title</name>
+			<required>false</required>
+		</attribute>
+	</tag>
+</taglib>

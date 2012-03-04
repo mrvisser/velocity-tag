@@ -1,0 +1,12 @@
+#macro(doStartTag)
+    <div id="$id" class="container $!styleClass">
+    	<h1 class="title">$title</h1>
+    	<div class="content">
+#end
+
+#* Rendered tag content will go in here. *#
+
+#macro(doEndTag)
+    	</div>
+    </div>
+#end
