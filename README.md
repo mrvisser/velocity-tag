@@ -29,11 +29,6 @@ First, extend ``ca.mrvisser.velocitytag.api.VelocityTag`` like so:
 		private static final long serialVersionUID = 1L;
 	
 		private String who;
-		
-		@Override
-		protected String getTemplateReference() {
-			return "ca/mrvisser/testtags/templates/hello-world-tag.vm";
-		}
 	
 		@Override
 		protected Map<String, Object> buildContext() {
@@ -56,11 +51,12 @@ First, extend ``ca.mrvisser.velocitytag.api.VelocityTag`` like so:
 		}
 	}
 
-* ``getTemplateReference()`` must point to a velocity template located on the class-path (e.g., WEB-INF/classes/...)
 * ``reset()`` is used to clear the state of the tag after it has finished rendering. Since servlet containers may pool tag instances this is useful to clear potential memory-leaks and reset the tag state for the next execution.
 * ``buildContext()`` is responsible for building the data that will be given directly to your velocity template. You'll see in the next file how the template uses the data
 
-Second, write a velocity template for your tag and place it in ``ca/mrvisser/testtags/templates/hello-world-tag.vm``:
+Second, write a velocity template for your tag and place it in a VM file that is in the same package as your java class, with the same file name:
+
+``ca/mrvisser/testtags/HelloWorldTag.vm``
 
 	#macro(doStartTag)
 		<span>Hello, $who!
